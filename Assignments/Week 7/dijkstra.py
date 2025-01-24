@@ -1,9 +1,12 @@
+import heapq
 import math
+from logging import raiseExceptions
+from time import sleep
 
-NODE = 0
-LENGTH = 1
 KEY = 0
 VALUE = 1
+LENGTH = 0
+NODE = 1
 ROOT = 0
 
 class CustomHeap:
@@ -11,25 +14,45 @@ class CustomHeap:
         self.heap = []
         self.size = 0
 
-    def insert(self, item):
-        self.heap.append(item)
+    def insert(self, key, value):
+        self.heap.append([key, value])
         self.size += 1
         self._bubble_up(self.size - 1)
 
     def extract_min(self):
-        minimum = self.heap[ROOT]
+        min_value = self.heap[ROOT][VALUE]
         last_item = self.heap[self.size - 1]
         self.heap[ROOT] = last_item
         self.heap.pop()
         self.size -= 1
         self._bubble_down(ROOT)
-        return minimum
+        return min_value
 
-    def delete(self, item):
+    def delete(self, value):
+        item = self._get_item(value)
+        if item is None:
+            return
         item[KEY] = -1
         item_index = self.heap.index(item)
         self._bubble_up(item_index)
         self.extract_min()
+
+    def heapify(self, l: list):
+        self.heap = l
+        heapq.heapify(self.heap)
+        self.size = len(self.heap)
+
+    def update_key(self, new_key, value):
+        item = self._get_item(value)
+        if item is None:
+            return
+        item[KEY] = new_key
+        item_index = self.heap.index(item)
+        parent_index = (item_index - 1) // 2
+        if self.heap[parent_index][KEY] > self.heap[item_index][KEY]:
+            self._bubble_up(item_index)
+        else:
+            self._bubble_down(item_index)
 
     def _swap(self, i, j):
         self.heap[i], self.heap[j] = self.heap[j], self.heap[i]
@@ -56,25 +79,33 @@ class CustomHeap:
             self._swap(item_index, smallest_child_index)
             item_index = smallest_child_index
 
-def dijkstra(graph: dict, v: int):
-    processed_nodes = {v: 0}
-    while True:
-        shortest_edge = {'head': None, 'dijkstra_score': math.inf}
-        for tail in processed_nodes:
-            for head in graph[tail]:
-                if head[NODE] not in processed_nodes:
-                    dijkstra_score = processed_nodes[tail] + head[LENGTH]
-                    if dijkstra_score < shortest_edge['dijkstra_score']:
-                        shortest_edge['head'] = head[NODE]
-                        shortest_edge['dijkstra_score'] = dijkstra_score
-        if shortest_edge['head'] is None:
-            for node in graph:
-                if node not in processed_nodes:
-                    processed_nodes[node] = math.inf
-            return processed_nodes
-        else:
-            node = shortest_edge['head']
-            processed_nodes[node] = shortest_edge['dijkstra_score']
+    def _get_item(self, value):
+        item = None
+        for i in self.heap:
+            _, val = i
+            if val == value:
+                item = i
+                break
+        return item
+
+def dijkstra(graph: dict, s: int):
+    processed_nodes = []
+    heap = CustomHeap()
+    keys = dict()
+    for tail, heads in graph.items():
+        keys[tail] = math.inf
+    keys[s] = 0
+    heap.heapify([[keys[tail], tail] for tail, heads in graph.items()])
+    while heap.heap:
+        min_key_tail = heap.extract_min()
+        processed_nodes.append(min_key_tail)
+        for head, length in graph[min_key_tail]:
+            if head not in processed_nodes:
+                # heap.delete(head)
+                keys[head] = min(keys[head], keys[min_key_tail] + length)
+                # heap.insert(keys[head], head)
+                heap.update_key(keys[head], head)
+    return keys
 
 def read_weighted_adj_list(file_path):
     adj_list = {}
@@ -85,41 +116,46 @@ def read_weighted_adj_list(file_path):
             heads = []
             for edge in line[1:]:
                 edge = edge.split(',')
-                edge = (int(edge[0]), int(edge[1]))
+                edge = [int(edge[0]), int(edge[1])]
                 heads.append(edge)
             adj_list[tail] = heads
     return adj_list
 
-# def main():
-#     g = read_weighted_adj_list('test2.txt')
-#     shortest_path_lengths = dijkstra(g, 1)
-#     # for i in range(1, 9):
-#     #     print(f'{shortest_path_lengths[i]},', end='')   # 0,1,2,3,4,4,3,2,
-#
-#     nodes = [7,37,59,82,99,115,133,165,188,197]
-#     for node in nodes:
-#         print(f'{shortest_path_lengths[node]},', end='')    # 2599,2610,2947,2052,2367,2399,2029,2442,2505,3068,
+def test_1():
+    g = read_weighted_adj_list('test1.txt')
+    shortest_path_lengths = dijkstra(g, 1)
+    for i in range(1, 9):
+        print(f'{shortest_path_lengths[i]},', end='')
 
-# def main():
-#     heap = CustomHeap()
-#     item = [5, '']
-#     heap.insert(item)
-#     heap.insert([7, ''])
-#     heap.insert([3, ''])
-#     heap.insert([2, ''])
-#     heap.insert([6, ''])
-#     heap.insert([1, ''])
-#     heap.insert([4, ''])
-#
-#     print(heap.heap)
-#
-#     heap.delete(item)
-#
-#     print(heap.heap)
-#
-#     for _ in range(heap.size):
-#         minimum = heap.extract_min()
-#         print(minimum[KEY])
+def test_2():
+    g = read_weighted_adj_list('test2.txt')
+    shortest_path_lengths = dijkstra(g, 1)
+    nodes = [7,37,59,82,99,115,133,165,188,197]
+    for node in nodes:
+        print(f'{shortest_path_lengths[node]},', end='')
+
+def test_custom_heap():
+    heap = CustomHeap()
+
+    heap.insert(5, 'five')
+    heap.insert(7, 'seven')
+    heap.insert(3, 'three')
+    heap.insert(2, 'two')
+    heap.insert(6, 'six')
+    heap.insert(1, 'one')
+    heap.insert(4, 'four')
+
+    print(heap.heap)
+    heap.delete('five')
+    print(heap.heap)
+    heap.delete('one')
+    print(heap.heap, '\n')
+
+    for _ in range(heap.size):
+        minimum = heap.extract_min()
+        print("min:\t", minimum, '\nheap:\t', heap.heap)
 
 if __name__ == "__main__":
-    main()
+    # test_custom_heap()
+    # test_1()    # 0,1,2,3,4,4,3,2,
+    test_2()    # 2599,2610,2947,2052,2367,2399,2029,2442,2505,3068,
