@@ -1,7 +1,5 @@
 import heapq
 import math
-from logging import raiseExceptions
-from time import sleep
 
 KEY = 0
 VALUE = 1
@@ -14,8 +12,8 @@ class CustomHeap:
         self.heap = []
         self.size = 0
 
-    def insert(self, key, value):
-        self.heap.append([key, value])
+    def insert(self, item):
+        self.heap.append(item)
         self.size += 1
         self._bubble_up(self.size - 1)
 
@@ -28,24 +26,21 @@ class CustomHeap:
         self._bubble_down(ROOT)
         return min_value
 
-    def delete(self, value):
-        item = self._get_item(value)
-        if item is None:
-            return
+    def find_min(self):
+        return self.heap[ROOT][VALUE]
+
+    def heapify(self, l: list): # wrapper
+        self.heap = l
+        heapq.heapify(self.heap)
+        self.size = len(self.heap)
+
+    def delete(self, item):
         item[KEY] = -1
         item_index = self.heap.index(item)
         self._bubble_up(item_index)
         self.extract_min()
 
-    def heapify(self, l: list):
-        self.heap = l
-        heapq.heapify(self.heap)
-        self.size = len(self.heap)
-
-    def update_key(self, new_key, value):
-        item = self._get_item(value)
-        if item is None:
-            return
+    def update_key(self, new_key, item):
         item[KEY] = new_key
         item_index = self.heap.index(item)
         parent_index = (item_index - 1) // 2
@@ -79,32 +74,31 @@ class CustomHeap:
             self._swap(item_index, smallest_child_index)
             item_index = smallest_child_index
 
-    def _get_item(self, value):
-        item = None
-        for i in self.heap:
-            _, val = i
-            if val == value:
-                item = i
-                break
-        return item
 
 def dijkstra(graph: dict, s: int):
     processed_nodes = []
     heap = CustomHeap()
     keys = dict()
+    heap_item = dict()
     for tail, heads in graph.items():
         keys[tail] = math.inf
     keys[s] = 0
-    heap.heapify([[keys[tail], tail] for tail, heads in graph.items()])
+    # heap.heapify([[keys[tail], tail] for tail, heads in graph.items()])
+    for node in graph.keys():
+        item = [keys[node], node]
+        heap.insert(item)
+        heap_item[node] = item
     while heap.heap:
         min_key_tail = heap.extract_min()
         processed_nodes.append(min_key_tail)
         for head, length in graph[min_key_tail]:
             if head not in processed_nodes:
-                # heap.delete(head)
+                item = heap_item[head]
+                # heap.delete(item)
                 keys[head] = min(keys[head], keys[min_key_tail] + length)
-                # heap.insert(keys[head], head)
-                heap.update_key(keys[head], head)
+                # item[KEY] = keys[head]
+                # heap.insert(item)
+                heap.update_key(keys[head], item)
     return keys
 
 def read_weighted_adj_list(file_path):
@@ -137,18 +131,20 @@ def test_2():
 def test_custom_heap():
     heap = CustomHeap()
 
-    heap.insert(5, 'five')
-    heap.insert(7, 'seven')
-    heap.insert(3, 'three')
-    heap.insert(2, 'two')
-    heap.insert(6, 'six')
-    heap.insert(1, 'one')
-    heap.insert(4, 'four')
+    five = [5, 'five']
+    heap.insert(five)
+    heap.insert([7, 'seven'])
+    heap.insert([3, 'three'])
+    heap.insert([2, 'two'])
+    heap.insert([6, 'six'])
+    one = [1, 'one']
+    heap.insert(one)
+    heap.insert([4, 'four'])
 
     print(heap.heap)
-    heap.delete('five')
+    heap.delete(five)
     print(heap.heap)
-    heap.delete('one')
+    heap.delete(one)
     print(heap.heap, '\n')
 
     for _ in range(heap.size):
