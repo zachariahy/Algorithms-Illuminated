@@ -73,7 +73,7 @@ def all_min_paths_reduction():
     min_min_path = min([path for sublist in all_min_paths for path in sublist])
     print(min_min_path)
 
-def floyd_warshall(graph: dict) -> list | str:
+def floyd_warshall(graph: dict) -> list | None:
     n = len(graph)
     dp = [[[math.inf for _ in range(n)] for _ in range(n)] for _ in range(n+1)]
     # base cases
@@ -101,8 +101,8 @@ def floyd_warshall(graph: dict) -> list | str:
 
 if __name__ == "__main__":
     # all_min_paths_reduction()
-    g = read_directed_weighted_edge_list("problem18.8test1.txt")
-    # g = read_directed_weighted_edge_list("problem18.8test2.txt")
+    # g = read_directed_weighted_edge_list("problem18.8test1.txt")
+    g = read_directed_weighted_edge_list("problem18.8test2.txt")
     all_min_paths = floyd_warshall(g)
 
     if all_min_paths is None:
