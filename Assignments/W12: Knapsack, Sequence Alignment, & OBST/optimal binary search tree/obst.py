@@ -1,6 +1,6 @@
 
 def opt_bst(n, key_weights: list) -> int:
-    # precompute weights
+    # precompute weights (knuth's optimization)
 
     subproblem_solutions = [[0 for _ in range(n+1)] for _ in range(n+1)]
     for i in range(1, n+1):
