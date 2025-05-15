@@ -3,7 +3,7 @@ import math
 OUT_EDGES = 0
 IN_EDGES = 1
 
-def read_directed_weighted_edge_list(file_path):
+def read_directed_weighted_edge_list(file_path) -> dict:
     """
     Reads a directed weighted edge list from a file and returns an adjacency list.
 
@@ -34,7 +34,7 @@ def read_directed_weighted_edge_list(file_path):
 
     return adj_list
 
-def bellman_ford(graph: dict, s: int):
+def bellman_ford(graph: dict, s: int) -> list | None:
     n_nodes = len(graph)
     dp = [[math.inf for _ in range(n_nodes)] for _ in range(n_nodes+1)]
     dp[0][s] = 0
@@ -58,17 +58,20 @@ def floyd_warshall():
     pass
 
 if __name__ == "__main__":
-    # graph = read_directed_weighted_edge_list("problem18.8test1.txt") # -2
-    graph = read_directed_weighted_edge_list("problem18.8test2.txt") # negative cycle
+    # g = read_directed_weighted_edge_list("problem18.8test1.txt") # -2
+    # g = read_directed_weighted_edge_list("problem18.8test2.txt") # Negative Cycle
+    # g = read_directed_weighted_edge_list("g1.txt")  # Negative Cycle
+    # g = read_directed_weighted_edge_list("g2.txt")  # Negative Cycle
+    g = read_directed_weighted_edge_list("g3.txt")  # -19
 
-    min_paths = []
-    for v in range(len(graph)):
-        path = bellman_ford(graph, v)
-        min_paths.append(path)
+    all_min_paths = []
+    for v in range(len(g)):
+        min_paths = bellman_ford(g, v)
+        all_min_paths.append(min_paths)
 
-        if path is None:
+        if min_paths is None:
             print("Negative Cycle")
             quit()
 
-    min_min_path = min([path for sublist in min_paths for path in sublist])
+    min_min_path = min([path for sublist in all_min_paths for path in sublist])
     print(min_min_path)
